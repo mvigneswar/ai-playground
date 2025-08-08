@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0B0E14;
+            color: white;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #5E6AD2;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: #1C212B;
+            border: 1px solid #2A3441;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #5E6AD2;
+            border-color: #5E6AD2;
+        }
+        
+        .tab:hover {
+            background: #4A5BC0;
+        }
+        
+        .content {
+            background: #0F131A;
+            border: 1px solid #1C212B;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #9AA4B2;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            background: #1C212B;
+            border: 1px solid #2A3441;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #5E6AD2;
+            box-shadow: 0 0 0 2px rgba(94, 106, 210, 0.2);
+        }
+        
+        .btn {
+            background: #5E6AD2;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #4A5BC0;
+        }
+        
+        .btn:disabled {
+            background: #2A3441;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #1C212B;
+            border-radius: 8px;
+            border: 1px solid #2A3441;
+        }
+        
+        .result h3 {
+            margin-bottom: 10px;
+            color: #5E6AD2;
+        }
+        
+        .error {
+            background: #4A1A1A;
+            border-color: #8B2A2A;
+            color: #FCA5A5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #9AA4B2;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Playground</h1>
+            <p>Multi-modal AI skills playground</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('conversation')">Conversation Analysis</div>
+            <div class="tab" onclick="showTab('image')">Image Analysis</div>
+            <div class="tab" onclick="showTab('summarize')">Document/URL Summarization</div>
+        </div>
+        
+        <!-- Conversation Analysis -->
+        <div id="conversation" class="content">
+            <h2>Conversation Analysis</h2>
+            <p>Upload an audio file to transcribe, diarize, and summarize.</p>
+            
+            <div class="form-group">
+                <label for="audio-file">Audio File:</label>
+                <input type="file" id="audio-file" accept="audio/*">
+            </div>
+            
+            <button class="btn" onclick="analyzeConversation()">Analyze Conversation</button>
+            
+            <div id="conversation-result" class="result hidden">
+                <h3>Transcript</h3>
+                <div id="transcript"></div>
+                
+                <h3>Diarization</h3>
+                <div id="diarization"></div>
+                
+                <h3>Summary</h3>
+                <div id="conversation-summary"></div>
+            </div>
+        </div>
+        
+        <!-- Image Analysis -->
+        <div id="image" class="content hidden">
+            <h2>Image Analysis</h2>
+            <p>Upload an image to get a detailed description.</p>
+            
+            <div class="form-group">
+                <label for="image-file">Image File:</label>
+                <input type="file" id="image-file" accept="image/*">
+            </div>
+            
+            <button class="btn" onclick="analyzeImage()">Analyze Image</button>
+            
+            <div id="image-result" class="result hidden">
+                <h3>Description</h3>
+                <div id="image-description"></div>
+            </div>
+        </div>
+        
+        <!-- Document/URL Summarization -->
+        <div id="summarize" class="content hidden">
+            <h2>Document/URL Summarization</h2>
+            <p>Upload a PDF or provide a URL to get a summary.</p>
+            
+            <div class="form-group">
+                <label for="document-file">PDF File:</label>
+                <input type="file" id="document-file" accept=".pdf">
+            </div>
+            
+            <div class="form-group">
+                <label for="url-input">URL:</label>
+                <input type="url" id="url-input" placeholder="https://...">
+            </div>
+            
+            <button class="btn" onclick="summarizeContent()">Summarize</button>
+            
+            <div id="summarize-result" class="result hidden">
+                <h3>Summary</h3>
+                <div id="summary-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected content
+            document.getElementById(tabName).classList.remove('hidden');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+        
+        async function analyzeConversation() {
+            const fileInput = document.getElementById('audio-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an audio file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('audio', file);
+            
+            showLoading('conversation-result');
+            
+            try {
+                const response = await fetch('/api/conversation', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('transcript').textContent = data.transcript || 'No transcript available';
+                    document.getElementById('diarization').textContent = JSON.stringify(data.diarization, null, 2);
+                    document.getElementById('conversation-summary').textContent = data.summary || 'No summary available';
+                    document.getElementById('conversation-result').classList.remove('hidden');
+                } else {
+                    showError('conversation-result', data.error || 'An error occurred');
+                }
+            } catch (error) {
+                showError('conversation-result', 'Network error: ' + error.message);
+            }
+        }
+        
+        async function analyzeImage() {
+            const fileInput = document.getElementById('image-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            showLoading('image-result');
+            
+            try {
+                const response = await fetch('/api/image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('image-description').textContent = data.description || 'No description available';
+                    document.getElementById('image-result').classList.remove('hidden');
+                } else {
+                    showError('image-result', data.error || 'An error occurred');
+                }
+            } catch (error) {
+                showError('image-result', 'Network error: ' + error.message);
+            }
+        }
+        
+        async function summarizeContent() {
+            const fileInput = document.getElementById('document-file');
+            const urlInput = document.getElementById('url-input');
+            const file = fileInput.files[0];
+            const url = urlInput.value.trim();
+            
+            if (!file && !url) {
+                alert('Please provide a PDF file or URL');
+                return;
+            }
+            
+            const formData = new FormData();
+            if (file) formData.append('file', file);
+            if (url) formData.append('url', url);
+            
+            showLoading('summarize-result');
+            
+            try {
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('summary-content').textContent = data.summary || 'No summary available';
+                    document.getElementById('summarize-result').classList.remove('hidden');
+                } else {
+                    showError('summarize-result', data.error || 'An error occurred');
+                }
+            } catch (error) {
+                showError('summarize-result', 'Network error: ' + error.message);
+            }
+        }
+        
+        function showLoading(resultId) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.innerHTML = '<div class="loading">Processing...</div>';
+            resultDiv.classList.remove('hidden');
+        }
+        
+        function showError(resultId, message) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.innerHTML = `<div class="error"><h3>Error</h3><div>${message}</div></div>`;
+            resultDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html> 
