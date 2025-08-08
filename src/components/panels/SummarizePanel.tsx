@@ -7,22 +7,39 @@ export function SummarizePanel() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async () => {
     setLoading(true);
     setSummary("");
-    const form = new FormData();
-    if (file) form.append("file", file);
-    if (url) form.append("url", url);
-    const res = await fetch("/api/summarize", { method: "POST", body: form });
-    setLoading(false);
-    if (!res.ok) {
-      const msg = await res.text();
-      alert(msg);
-      return;
+    setError("");
+    
+    try {
+      const form = new FormData();
+      if (file) form.append("file", file);
+      if (url) form.append("url", url);
+      
+      console.log("Sending request to /api/summarize");
+      const res = await fetch("/api/summarize", { method: "POST", body: form });
+      
+      console.log("Response status:", res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("API Error:", errorText);
+        setError(`Error: ${res.status} - ${errorText}`);
+        return;
+      }
+      
+      const data = await res.json();
+      console.log("API Response:", data);
+      setSummary(data.summary ?? "");
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setError(`Network error: ${err}`);
+    } finally {
+      setLoading(false);
     }
-    const data = await res.json();
-    setSummary(data.summary ?? "");
   };
 
   return (
@@ -48,6 +65,13 @@ export function SummarizePanel() {
           {loading ? "Summarizing…" : "Summarize"}
         </button>
       </div>
+
+      {error && (
+        <div className="linear-card p-4 space-y-2 bg-red-900/20 border-red-500">
+          <div className="linear-label text-red-400">Error</div>
+          <div className="text-sm text-red-300">{error}</div>
+        </div>
+      )}
 
       <div className="linear-card p-4 space-y-2">
         <div className="linear-label">Summary</div>

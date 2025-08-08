@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 
+export const runtime = "nodejs";
+
 async function extractFromPdf(file: File) {
   const pdfParse = (await import("pdf-parse")).default;
   const ab = await file.arrayBuffer();
@@ -31,7 +33,12 @@ async function extractFromUrl(url: string) {
 }
 
 async function summarize(text: string) {
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY environment variable is not set");
+  }
+  
+  const client = new OpenAI({ apiKey });
   const completion = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
@@ -44,22 +51,38 @@ async function summarize(text: string) {
 }
 
 export async function POST(req: Request) {
-  const form = await req.formData();
-  const file = form.get("file");
-  const url = String(form.get("url") ?? "");
-  if (!(file instanceof File) && !url) {
-    return new NextResponse("Provide a file or a URL", { status: 400 });
-  }
+  try {
+    const form = await req.formData();
+    const file = form.get("file");
+    const url = String(form.get("url") ?? "");
+    
+    if (!(file instanceof File) && !url) {
+      return new NextResponse("Provide a file or a URL", { status: 400 });
+    }
 
-  let text = "";
-  if (file instanceof File) {
-    if (file.name.endsWith(".pdf")) text = await extractFromPdf(file);
-    else text = await extractFromDoc(file);
-  } else if (url) {
-    text = await extractFromUrl(url);
+    let text = "";
+    if (file instanceof File) {
+      if (file.name.endsWith(".pdf")) {
+        text = await extractFromPdf(file);
+      } else {
+        text = await extractFromDoc(file);
+      }
+    } else if (url) {
+      text = await extractFromUrl(url);
+    }
+    
+    if (!text.trim()) {
+      return new NextResponse("No textual content extracted", { status: 400 });
+    }
+    
+    const summary = await summarize(text);
+    return NextResponse.json({ summary });
+  } catch (error) {
+    console.error("Summarize API error:", error);
+    return new NextResponse(
+      `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}`, 
+      { status: 500 }
+    );
   }
-  if (!text.trim()) return new NextResponse("No textual content extracted", { status: 400 });
-  const summary = await summarize(text);
-  return NextResponse.json({ summary });
 }
 
