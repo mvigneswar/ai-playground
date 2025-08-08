@@ -16,7 +16,7 @@ export default function HomePage() {
     <AuthGate>
       <main className="max-w-5xl mx-auto p-6 space-y-6">
         <header className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">AI Playground</h1>
+          <h1 className="text-xl font-semibold">AI Playground - DEPLOYED SUCCESSFULLY!</h1>
           <SkillSelector value={skill} onChange={setSkill} />
         </header>
 
